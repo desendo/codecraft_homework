@@ -4,53 +4,33 @@ namespace ShootEmUp
 {
     public sealed class PlayerController : MonoBehaviour
     {
-        [SerializeField]
-        private Player character;
-
-        [SerializeField]
-        private BulletManager bulletManager;
-
-        private bool fireRequired;
-        private float moveDirection;
+        [SerializeField] private Player _character;
+        [SerializeField] private FireAdapter _fireAdapter;
 
         private void Awake()
         {
-            this.character.OnHealthEmpty += _ => Time.timeScale = 0;
+            _character.OnDeath += _ => Time.timeScale = 0;
+            _character.FireRequested += HandlePlayerFireRequested;
         }
 
+        private void HandlePlayerFireRequested(Vector2 position, Vector2 direction)
+        {
+            _fireAdapter.Fire(position, direction);
+        }
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space)) 
-                fireRequired = true;
+            if (Input.GetKeyDown(KeyCode.Space))
+                _character.Fire();
+
+            var moveDirection = Vector2.zero;
 
             if (Input.GetKey(KeyCode.LeftArrow))
-                this.moveDirection = -1;
-            else if (Input.GetKey(KeyCode.RightArrow))
-                this.moveDirection = 1;
-            else
-                this.moveDirection = 0;
+                moveDirection.x += -1;
+            if (Input.GetKey(KeyCode.RightArrow))
+                moveDirection.x += 1;
+
+            _character.Move(moveDirection);
         }
 
-        private void FixedUpdate()
-        {
-            if (fireRequired)
-            {
-                bulletManager.SpawnBullet(
-                    this.character.firePoint.position,
-                    Color.blue,
-                    (int) PhysicsLayer.PLAYER_BULLET,
-                    1,
-                    true,
-                    this.character.firePoint.rotation * Vector3.up * 3
-                );
-
-                fireRequired = false;
-            }
-            
-            Vector2 moveDirection = new Vector2(this.moveDirection, 0);
-            Vector2 moveStep = moveDirection * Time.fixedDeltaTime * character.speed;
-            Vector2 targetPosition = character._rigidbody.position + moveStep;
-            character._rigidbody.MovePosition(targetPosition);
-        }
     }
 }
