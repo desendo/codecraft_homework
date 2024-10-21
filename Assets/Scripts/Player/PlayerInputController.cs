@@ -1,18 +1,10 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace ShootEmUp
 {
-    public sealed class PlayerController : MonoBehaviour
+    public sealed class PlayerInputController : MonoBehaviour
     {
         [SerializeField] private Player _character;
-        [SerializeField] private FireAdapter _fireAdapter;
-
-        private void Awake()
-        {
-            _character.OnDeath += _ => Time.timeScale = 0;
-            _fireAdapter.AddSubscriber(_character);
-        }
 
         private void Update()
         {

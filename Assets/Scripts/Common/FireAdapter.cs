@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ShootEmUp
@@ -11,6 +12,13 @@ namespace ShootEmUp
         [SerializeField] private Color _color;
         [SerializeField] private PhysicsLayer _physicsLayer;
         [SerializeField] private BulletManager _bulletManager;
+        [SerializeField] private GameObject _fireRequester;
+
+        private void Awake()
+        {
+            if (_fireRequester != null && _fireRequester.TryGetComponent<IFireRequester>(out var requester))
+                AddSubscriber(requester);
+        }
 
         private void Fire(Vector2 position, Vector2 direction)
         {

@@ -9,7 +9,7 @@ namespace ShootEmUp
         [SerializeField] public new Rigidbody2D rigidbody2D;
         [SerializeField] public SpriteRenderer spriteRenderer;
 
-        public event Action<Bullet, Collision2D> OnCollisionEntered;
+        public event Action<Bullet> OnDestroyRequest;
 
         public bool IsPlayer { get; private set; }
 
@@ -18,7 +18,7 @@ namespace ShootEmUp
         private void OnCollisionEnter2D(Collision2D collision)
         {
             TryDealDamage(collision.gameObject);
-            OnCollisionEntered?.Invoke(this, collision);
+            OnDestroyRequest?.Invoke(this);
         }
 
         private void TryDealDamage(GameObject other)

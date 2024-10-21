@@ -21,12 +21,12 @@ namespace ShootEmUp
 
         private void HandleOnSpawned(Bullet bullet)
         {
-            bullet.OnCollisionEntered += OnBulletCollision;
+            bullet.OnDestroyRequest += HandleBulletDestroy;
         }
 
         private void HandleOnDespawned(Bullet bullet)
         {
-            bullet.OnCollisionEntered -= OnBulletCollision;
+            bullet.OnDestroyRequest -= HandleBulletDestroy;
         }
 
         private void FixedUpdate()
@@ -52,7 +52,7 @@ namespace ShootEmUp
             bullet.Setup(position, color, physicsLayer, damage, isPlayer, velocity);
         }
 
-        private void OnBulletCollision(Bullet bullet, Collision2D collision)
+        private void HandleBulletDestroy(Bullet bullet)
         {
             RemoveBullet(bullet);
         }
