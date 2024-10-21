@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ShootEmUp
 {
@@ -10,13 +11,9 @@ namespace ShootEmUp
         private void Awake()
         {
             _character.OnDeath += _ => Time.timeScale = 0;
-            _character.FireRequested += HandlePlayerFireRequested;
+            _fireAdapter.AddSubscriber(_character);
         }
 
-        private void HandlePlayerFireRequested(Vector2 position, Vector2 direction)
-        {
-            _fireAdapter.Fire(position, direction);
-        }
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -29,8 +26,7 @@ namespace ShootEmUp
             if (Input.GetKey(KeyCode.RightArrow))
                 moveDirection.x += 1;
 
-            _character.Move(moveDirection);
+            _character.SetMoveDirection(moveDirection);
         }
-
     }
 }

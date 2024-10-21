@@ -5,24 +5,22 @@ using Object = UnityEngine.Object;
 
 namespace ShootEmUp
 {
-    public class Spawner<T> where T : MonoBehaviour
+
+    public abstract class SpawnerAbstract<T> : MonoBehaviour where T : MonoBehaviour
     {
-        private readonly T _prefab;
+        [SerializeField] private T _prefab;
+        [SerializeField] public Transform _instancesParent;
+        [SerializeField] private Transform _poolContainer;
         private readonly Queue<T> _pool = new();
         private readonly List<T> _active = new();
-        private readonly Transform _poolContainer;
-        private readonly Transform _instancesParent;
 
-        public event Action<T> OnSpawned;
         public event Action<T> OnDespawned;
+        public event Action<T> OnSpawned;
         public IReadOnlyList<T> ActiveItems => _active;
 
-        public Spawner(T prefab, Transform container, Transform worldTransform = null)
+        public void Awake()
         {
-            _prefab = prefab;
-            _poolContainer = container;
             _poolContainer.gameObject.SetActive(false);
-            _instancesParent = worldTransform;
         }
 
         public void Prewarm(int count = 5)
@@ -56,4 +54,6 @@ namespace ShootEmUp
             OnDespawned?.Invoke(instance);
         }
     }
+
+
 }

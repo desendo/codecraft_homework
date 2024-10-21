@@ -17,7 +17,18 @@ namespace ShootEmUp
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
+            TryDealDamage(collision.gameObject);
             OnCollisionEntered?.Invoke(this, collision);
+        }
+
+        private void TryDealDamage(GameObject other)
+        {
+            if (Damage <= 0) return;
+
+            if (!other.TryGetComponent<IUnit>(out var unit)) return;
+
+            if (IsPlayer != unit.IsPlayer)
+                unit.Damage(Damage);
         }
 
         public void Setup(Vector2 position, Color color, int physicsLayer, int damage, bool isPlayer, Vector2 velocity)

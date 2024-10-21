@@ -5,16 +5,11 @@ namespace ShootEmUp
 {
     public sealed class BulletManager : MonoBehaviour
     {
-        [SerializeField] public Bullet _prefab;
-        [SerializeField] public Transform _worldTransform;
         [SerializeField] private LevelBounds _levelBounds;
-        [SerializeField] private Transform _inactiveContainer;
-
-        private Spawner<Bullet> _spawner;
+        [SerializeField] private BulletSpawnerAbstract _spawner;
 
         private void Awake()
         {
-            _spawner = new Spawner<Bullet>(_prefab, _inactiveContainer, _worldTransform);
             _spawner.Prewarm(7);
         }
 
@@ -59,25 +54,7 @@ namespace ShootEmUp
 
         private void OnBulletCollision(Bullet bullet, Collision2D collision)
         {
-            TryDealDamage(bullet, collision.gameObject);
             RemoveBullet(bullet);
-        }
-
-        private bool TryDealDamage(Bullet bullet, GameObject other)
-        {
-            int damage = bullet.Damage;
-            if (damage <= 0)
-                return false;
-
-            if (other.TryGetComponent<IUnit>(out var unit))
-            {
-                if (bullet.IsPlayer == unit.IsPlayer)
-                    return false;
-
-                unit.Damage(damage);
-                return true;
-            }
-            return false;
         }
 
         private void RemoveBullet(Bullet bullet)

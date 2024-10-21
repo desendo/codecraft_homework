@@ -165,9 +165,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _health: {fileID: 9205937085381900092}
-  _stepMover: {fileID: 4822783051716959905}
   _isPlayer: 1
-  firePoint: {fileID: 3926786963072264220}
+  _firePoint: {fileID: 3926786963072264220}
+  _stepMover: {fileID: 4822783051716959905}
 --- !u!114 &9205937085381900092
 MonoBehaviour:
   m_ObjectHideFlags: 0
