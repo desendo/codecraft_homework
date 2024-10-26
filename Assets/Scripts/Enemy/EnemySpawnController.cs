@@ -1,24 +1,13 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 namespace ShootEmUp
 {
 
-    public sealed class EnemySpawnController : MonoBehaviour
+    public sealed class EnemyController : MonoBehaviour
     {
-        [SerializeField] private Transform[] _spawnPositions;
-        [SerializeField] private Transform[] _attackPositions;
-        [SerializeField] private Player _character;
-        [SerializeField] private FireAdapter _fireAdapter;
-        [SerializeField] private EnemySpawner _spawner;
-        private void Awake()
-        {
-            _spawner.Prewarm(7);
-            _spawner.OnSpawned += HandleOnEnemyAdded;
-            _spawner.OnDespawned += HandleOnEnemyRemoved;
-        }
+        [SerializeField] private EnemyShipService _enemyShipService;
 
         private IEnumerator Start()
         {
@@ -26,45 +15,19 @@ namespace ShootEmUp
             {
                 yield return new WaitForSeconds(Random.Range(1, 2));
 
-                if (_spawner.ActiveItems.Count >= 5)
+                if (_enemyShipService.ActiveItems.Count >= 5)
                     continue;
 
-                AddEnemy();
+                var ship = _enemyShipService.AddShip();
+                ship.OnDeath += HandleEnemyDeath;
+
             }
         }
 
-        private void AddEnemy()
+        private void HandleEnemyDeath(Ship enemy)
         {
-            var enemy = _spawner.Spawn();
-            enemy.transform.position = GetRandomPoint(_spawnPositions);
-
-            var ai = enemy.GetComponent<EnemyAI>();
-            ai.SetDestination(GetRandomPoint(_attackPositions));
-            ai.Target = _character;
-
-        }
-
-        private void HandleOnEnemyAdded(Enemy enemy)
-        {
-            enemy.OnDeath += HandleEnemyDeath;
-            _fireAdapter.AddSubscriber(enemy);
-        }
-
-        private void HandleOnEnemyRemoved(Enemy enemy)
-        {
+            _enemyShipService.RemoveShip(enemy);
             enemy.OnDeath -= HandleEnemyDeath;
-            _fireAdapter.RemoveSubscriber(enemy);
-        }
-
-        private void HandleEnemyDeath(ShipBase enemy)
-        {
-            _spawner.Despawn(enemy as Enemy);
-        }
-
-        private Vector3 GetRandomPoint(Transform[] points)
-        {
-            var index = Random.Range(0, points.Length);
-            return points[index].position;
         }
     }
 }

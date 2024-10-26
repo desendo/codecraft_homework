@@ -1,15 +1,17 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ShootEmUp
 {
     public sealed class PlayerInputController : MonoBehaviour
     {
-        [SerializeField] private Player _character;
+        [SerializeField] private PlayerMover _playerMover;
+        [SerializeField] private Ship _playerShip;
 
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Space))
-                _character.Fire();
+                _playerShip.Fire();
 
             var moveDirection = Vector2.zero;
 
@@ -18,7 +20,7 @@ namespace ShootEmUp
             if (Input.GetKey(KeyCode.RightArrow))
                 moveDirection.x += 1;
 
-            _character.SetMoveDirection(moveDirection);
+            _playerMover.SetMoveDirection(moveDirection);
         }
     }
 }

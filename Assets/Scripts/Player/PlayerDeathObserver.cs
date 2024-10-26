@@ -5,7 +5,7 @@ namespace ShootEmUp
 {
     public sealed class PlayerDeathObserver : MonoBehaviour
     {
-        [SerializeField] private Player _character;
+        [SerializeField] private Ship _character;
 
         private void Awake()
         {

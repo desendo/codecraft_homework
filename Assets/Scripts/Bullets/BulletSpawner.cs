@@ -1,6 +1,11 @@
 ﻿namespace ShootEmUp
 {
-    public class BulletSpawnerAbstract : SpawnerAbstract<Bullet>
+    public class BulletSpawner : SpawnerAbstract<Bullet>
     {
+        public override void Awake()
+        {
+            base.Awake();
+            Prewarm(7);
+        }
     }
 }

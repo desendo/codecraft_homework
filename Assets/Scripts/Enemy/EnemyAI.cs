@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ShootEmUp
 {
@@ -7,23 +9,23 @@ namespace ShootEmUp
         [SerializeField] private float _countdown;
         [SerializeField] private DestinationMover _destinationMover;
         [SerializeField] private Timer _shootTimer;
-        [SerializeField] private ShipBase _shipBase;
+        [SerializeField] private Ship _ship;
         private float _currentTime;
         private Vector2 _destination;
-        public Player Target { get; set; }
+        public Ship Target { get; set; }
 
         private void Awake()
         {
             _destinationMover.OnDestination += () => _shootTimer.StartTimer();
-            _shootTimer.Setup(_countdown, true);
             _shootTimer.OnTime += Shoot;
+            _shootTimer.Setup(_countdown, true);
         }
 
         private void Shoot()
         {
-            Vector2 startPosition = _shipBase.FirePoint.position;
+            Vector2 startPosition = _ship.FirePoint.position;
             var delta = (Vector2)Target.transform.position - startPosition;
-            _shipBase.Fire(delta.normalized);
+            _ship.Fire(delta.normalized);
             _shootTimer.RestartTimer();
         }
 

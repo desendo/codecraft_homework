@@ -1,8 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ShootEmUp
 {
-    public sealed class Player : ShipBase
+    public class PlayerMover : MonoBehaviour
     {
         [SerializeField] private StepMover _stepMover;
         private Vector2 _moveDirection;

@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 8391373893821849277}
   - component: {fileID: 2764640521823733082}
   - component: {fileID: 3378650447954975639}
+  - component: {fileID: 5285050692526628290}
   m_Layer: 11
   m_Name: Enemy
   m_TagString: Untagged
@@ -164,12 +165,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 559606060570185700}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e09a324f54d94d6e84681731f36566c4, type: 3}
+  m_Script: {fileID: 11500000, guid: 98a4e551f8284f7ab62e1c15107afdc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _health: {fileID: 856540473653088502}
   _isPlayer: 0
   _firePoint: {fileID: 3195880656587174614}
+  _weapon: {fileID: 5285050692526628290}
 --- !u!114 &856540473653088502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -237,7 +239,24 @@ MonoBehaviour:
   _countdown: 2
   _destinationMover: {fileID: 5981303699086723008}
   _shootTimer: {fileID: 2764640521823733082}
-  _shipBase: {fileID: 102605417607457000}
+  _ship: {fileID: 102605417607457000}
+--- !u!114 &5285050692526628290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559606060570185700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a54bfa449ddd4cbbac59e4eae3f12060, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _bulletSpeed: 3
+  _isPlayer: 0
+  _damage: 1
+  _color: {r: 1, g: 0, b: 0, a: 1}
+  _physicsLayer: 13
 --- !u!1 &2239154907127902911
 GameObject:
   m_ObjectHideFlags: 0

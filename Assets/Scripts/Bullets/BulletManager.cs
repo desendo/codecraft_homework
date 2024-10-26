@@ -6,12 +6,7 @@ namespace ShootEmUp
     public sealed class BulletManager : MonoBehaviour
     {
         [SerializeField] private LevelBounds _levelBounds;
-        [SerializeField] private BulletSpawnerAbstract _spawner;
-
-        private void Awake()
-        {
-            _spawner.Prewarm(7);
-        }
+        [SerializeField] private BulletSpawner _spawner;
 
         private void OnEnable()
         {
@@ -36,6 +31,9 @@ namespace ShootEmUp
 
         private void CheckIsInLevelBounds()
         {
+            //кэш делать не будем, зачем нам мусор.
+            //а проверку пуль за границами можно оставить ленивой,
+            //т.к. для геймплея не критично всё в один кадр умещать
             foreach (var item in _spawner.ActiveItems)
             {
                 if (_levelBounds.InBounds(item.transform.position)) continue;
@@ -68,4 +66,5 @@ namespace ShootEmUp
             _spawner.OnDespawned -= HandleOnDespawned;
         }
     }
+
 }

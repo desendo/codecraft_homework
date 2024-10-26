@@ -11,6 +11,7 @@ namespace ShootEmUp
         [SerializeField] private T _prefab;
         [SerializeField] public Transform _instancesParent;
         [SerializeField] private Transform _poolContainer;
+        [SerializeField] private int _prewarm;
         private readonly Queue<T> _pool = new();
         private readonly List<T> _active = new();
 
@@ -18,9 +19,11 @@ namespace ShootEmUp
         public event Action<T> OnSpawned;
         public IReadOnlyList<T> ActiveItems => _active;
 
-        public void Awake()
+        public virtual void Awake()
         {
             _poolContainer.gameObject.SetActive(false);
+            if(_prewarm > 0)
+                Prewarm(_prewarm);
         }
 
         public void Prewarm(int count = 5)

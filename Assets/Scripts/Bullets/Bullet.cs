@@ -9,11 +9,10 @@ namespace ShootEmUp
         [SerializeField] public new Rigidbody2D rigidbody2D;
         [SerializeField] public SpriteRenderer spriteRenderer;
 
+        private bool _isPlayer;
+        private int _damage;
+
         public event Action<Bullet> OnDestroyRequest;
-
-        public bool IsPlayer { get; private set; }
-
-        public int Damage { get; private set; }
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
@@ -23,12 +22,12 @@ namespace ShootEmUp
 
         private void TryDealDamage(GameObject other)
         {
-            if (Damage <= 0) return;
+            if (_damage <= 0) return;
 
             if (!other.TryGetComponent<IUnit>(out var unit)) return;
 
-            if (IsPlayer != unit.IsPlayer)
-                unit.Damage(Damage);
+            if (_isPlayer != unit.IsPlayer)
+                unit.Damage(_damage);
         }
 
         public void Setup(Vector2 position, Color color, int physicsLayer, int damage, bool isPlayer, Vector2 velocity)
@@ -36,8 +35,8 @@ namespace ShootEmUp
             transform.position = position;
             spriteRenderer.color = color;
             gameObject.layer = physicsLayer;
-            Damage = damage;
-            IsPlayer = isPlayer;
+            _damage = damage;
+            _isPlayer = isPlayer;
             rigidbody2D.velocity = velocity;
         }
     }
