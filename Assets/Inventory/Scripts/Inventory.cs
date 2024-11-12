@@ -14,8 +14,8 @@ namespace Inventories
         private readonly int _height;
         private readonly Dictionary<Vector2Int, Item> _cellsOccupiedItems = new Dictionary<Vector2Int, Item>();
         private readonly Dictionary<Item, Vector2Int> _itemPositions = new Dictionary<Item, Vector2Int>();
-        private readonly Dictionary<int, int> _countByNames = new Dictionary<int, int>();
-        private readonly List<Item> _itemsList = new List<Item>();
+        //инкапсулировал счетчик по именам чтобы избежать двух счетчиков (обычный и для null имен) в основном классе
+        private readonly NameCounter _itemsNameCounter = new NameCounter();
         public event Action<Item, Vector2Int> OnAdded;
         public event Action<Item, Vector2Int> OnRemoved;
         public event Action<Item, Vector2Int> OnMoved;
@@ -23,7 +23,7 @@ namespace Inventories
 
         public int Width => _width;
         public int Height => _height;
-        public int Count => _itemsList.Count;
+        public int Count => _itemPositions.Count;
 
         public Inventory(in int width, in int height)
         {
@@ -287,7 +287,7 @@ namespace Inventories
             {
                 return false;
             }
-            return _itemsList.Contains(item);
+            return _itemPositions.ContainsKey(item);
         }
 
         /// <summary>
@@ -325,19 +325,17 @@ namespace Inventories
 
         public bool RemoveItem(in Item item, out Vector2Int position)
         {
-            if (item == null || !_itemsList.Contains(item))
+            if (item == null || !_itemPositions.ContainsKey(item))
             {
                 position = default;
                 return false;
             }
 
-            _itemsList.Remove(item);
-
             position = _itemPositions[item];
             _itemPositions.Remove(item);
-            UpdateOccupiedCells();
+            UpdateUnOccupiedCells(item, position);
 
-                _countByNames[GetNameKey(item.Name)]--;
+            _itemsNameCounter.Decrement(item);
 
             OnRemoved?.Invoke(item, position);
             return true;
@@ -446,8 +444,7 @@ namespace Inventories
                 _cellsOccupiedItems[key] = null;
             }
 
-            _itemsList.Clear();
-            _countByNames.Clear();
+            _itemsNameCounter.Reset();
             _itemPositions.Clear();
             OnCleared?.Invoke();
         }
@@ -457,8 +454,7 @@ namespace Inventories
         /// </summary>
         public int GetItemCount(string name)
         {
-            _countByNames.TryGetValue(GetNameKey(name), out var count);
-            return count;
+            return _itemsNameCounter.GetCount(name);
         }
 
         /// <summary>
@@ -472,7 +468,7 @@ namespace Inventories
             if (newPosition.x < 0 || newPosition.x == _width || newPosition.y < 0 || newPosition.y == _height)
                 return false;
 
-            if (!_itemsList.Contains(item))
+            if (!_itemPositions.ContainsKey(item))
                 return false;
 
             if (IsOccupiedIntersects(item, newPosition, true))
@@ -480,9 +476,13 @@ namespace Inventories
                 return false;
             }
 
+            var oldPosition = _itemPositions[item];
             _itemPositions[item] = newPosition;
-            UpdateOccupiedCells();
+            UpdateUnOccupiedCells(item, oldPosition);
+            UpdateOccupiedCells(item, newPosition);
+
             OnMoved?.Invoke(item, newPosition);
+
             return true;
         }
 
@@ -496,14 +496,17 @@ namespace Inventories
             foreach (var keyValuePair in _itemPositions)
                 savedPositions.Add(keyValuePair.Key, keyValuePair.Value);
 
+            //сортируем по размеру
+            //пусть будет линк. для читаемости)
+            var sorted = _itemPositions.Keys.OrderByDescending(x=>x.Size.x * x.Size.y).ToList();
+
             //отделяем вещи от инвентаря
             _itemPositions.Clear();
-            UpdateOccupiedCells();
+            for (int i = 0; i < _width; i++)
+            for (int j = 0; j < _height; j++)
+                _cellsOccupiedItems[new Vector2Int(i, j)] = null;
 
-            //сортируем по размеру
-            var sorted = _itemsList.OrderByDescending(x=>x.Size.x * x.Size.y).ToList();
-
-            //заполняем попорядку, вызываем событие, если позиция отличается
+            //заполняем по порядку, вызываем событие, если позиция отличается
             foreach (var item in sorted)
             {
                 if (FindFreePosition(item.Size, out var targetPosition))
@@ -530,12 +533,12 @@ namespace Inventories
 
         public IEnumerator<Item> GetEnumerator()
         {
-            return _itemsList.GetEnumerator();
+            return _itemPositions.Keys.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _itemsList.GetEnumerator();
+            return _itemPositions.Keys.GetEnumerator();
         }
 
         private Vector2Int IndexToPosition(int index)
@@ -550,18 +553,6 @@ namespace Inventories
             return index;
         }
 
-        private void UpdateOccupiedCells()
-        {
-            _cellsOccupiedItems.Clear();
-
-            InitCells();
-
-            foreach (var keyValuePair in _itemPositions)
-            {
-                UpdateOccupiedCells(keyValuePair.Key, keyValuePair.Value);
-            }
-        }
-
         private void InitCells()
         {
             for (int j = 0; j < _height; j++)
@@ -573,6 +564,7 @@ namespace Inventories
             }
         }
 
+        //заполняем ячейки под вещь
         private void UpdateOccupiedCells(Item item, Vector2Int coordinates)
         {
             for (var i = 0; i < item.Size.x; i++)
@@ -584,26 +576,77 @@ namespace Inventories
             }
         }
 
+        //освобождаем ячейки из-под вещи
+        private void UpdateUnOccupiedCells(Item item, Vector2Int coordinates)
+        {
+            for (var i = 0; i < item.Size.x; i++)
+            {
+                for (var j = 0; j < item.Size.y; j++)
+                {
+                    _cellsOccupiedItems[coordinates + new Vector2Int(i, j)] = null;
+                }
+            }
+        }
+
         private void InternalAdd(Item item, Vector2Int position)
         {
             if (item != null)
             {
-                _itemsList.Add(item);
-
-                _countByNames.TryAdd(GetNameKey(item.Name), 0);
-                _countByNames[GetNameKey(item.Name)]++;
-
+                _itemsNameCounter.Increment(item);
                 _itemPositions.TryAdd(item, position);
-                UpdateOccupiedCells();
+                UpdateOccupiedCells(item, position);
             }
         }
 
-        private int GetNameKey(string name)
+        private class NameCounter
         {
-            if (name == null)
-                return -1;
+            private int _nullCount;
+            private readonly Dictionary<string, int> _countByNames = new Dictionary<string, int>();
 
-            return name.GetHashCode();
+            public void Decrement(in Item item)
+            {
+                if (item.Name == null)
+                {
+                    _nullCount--;
+                    return;
+                }
+
+                if (!_countByNames.ContainsKey(item.Name))
+                    throw new KeyNotFoundException();
+
+                _countByNames[item.Name]--;
+            }
+
+            public void Increment(in Item item)
+            {
+                if (item.Name == null)
+                {
+                    _nullCount++;
+                    return;
+                }
+
+                _countByNames.TryAdd(item.Name, 0);
+
+                _countByNames[item.Name]++;
+            }
+
+            public void Reset()
+            {
+                _countByNames.Clear();
+                _nullCount = 0;
+            }
+
+
+            public int GetCount(string name)
+            {
+                if (name == null)
+                    return _nullCount;
+
+                if (!_countByNames.ContainsKey(name))
+                    return 0;
+
+                return _countByNames[name];
+            }
         }
     }
 }
