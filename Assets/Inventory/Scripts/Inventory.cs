@@ -12,7 +12,7 @@ namespace Inventories
     {
         private readonly int _width;
         private readonly int _height;
-        private readonly Dictionary<Vector2Int, Item> _cellsOccupiedItems = new Dictionary<Vector2Int, Item>();
+        private readonly Item[,] _cellsOccupiedItems;
         private readonly Dictionary<Item, Vector2Int> _itemPositions = new Dictionary<Item, Vector2Int>();
         //инкапсулировал счетчик по именам чтобы избежать двух счетчиков (обычный и для null имен) в основном классе
         private readonly NameCounter _itemsNameCounter = new NameCounter();
@@ -33,7 +33,7 @@ namespace Inventories
             _width = width;
             _height = height;
 
-            InitCells();
+            _cellsOccupiedItems = new Item[_width, _height];
         }
 
         public Inventory(
@@ -49,7 +49,6 @@ namespace Inventories
             {
                 var position = items[index].Value;
                 var item = items[index].Key;
-
                 InternalAdd(item, position);
             }
         }
@@ -111,7 +110,7 @@ namespace Inventories
         /// </summary>
         public bool CanAddItem(in Item item, in Vector2Int position)
         {
-            if (position.y < 0 || position.x < 0)
+            if (!IsWithinRange(position))
                 return false;
 
             if (!CanAddItem(item))
@@ -126,7 +125,6 @@ namespace Inventories
 
             if (_height < item.Size.y + position.y)
             {
-
                 return false;
             }
 
@@ -152,7 +150,7 @@ namespace Inventories
             if (!item.IsCorrectSize())
                 throw new ArgumentException();
 
-            if (_cellsOccupiedItems.ContainsValue(item))
+            if (_itemPositions.ContainsKey(item))
             {
 
                 return false;
@@ -177,10 +175,13 @@ namespace Inventories
                 for (int j = 0; j < item.Size.y; j++)
                 {
                     var positionToCheck = position + new Vector2Int(i, j);
-                    if (!_cellsOccupiedItems.TryGetValue(positionToCheck, out var itemAtPosition))
+
+                    if (!IsWithinRange(positionToCheck))
                     {
                         return true;
                     }
+
+                    var itemAtPosition = _cellsOccupiedItems[positionToCheck.x, positionToCheck.y];
 
                     if (exceptSelf && item.Equals(itemAtPosition))
                     {
@@ -247,34 +248,34 @@ namespace Inventories
             if (size.y <= 0 || size.x <= 0)
                 throw new ArgumentOutOfRangeException();
 
-            foreach (var keyValuePair in _cellsOccupiedItems)
+            freePosition = default;
+            for (int y = 0; y < _height; y++)
+            for (int x = 0; x < _width; x++)
             {
-                    bool isSuccessPosition = true;
-                    for (int i = 0; i < size.x; i++)
+                var isCellsFree = true;
+                for (int w = 0; w < size.x; w++)
+                {
+                    for (int h = 0; h < size.y; h++)
                     {
-                        for (int j = 0; j < size.y; j++)
+                        if (!IsFree(x + w, y + h))
                         {
-                            if (!IsFree(keyValuePair.Key + new Vector2Int(i, j)))
-                            {
-                                isSuccessPosition = false;
-                                break;
-                            }
-                        }
-                        if (!isSuccessPosition)
-                        {
+                            isCellsFree = false;
                             break;
                         }
                     }
 
-                    if (!isSuccessPosition)
-                    {
-                        continue;
-                    }
-                    freePosition = keyValuePair.Key;
+                    if (!isCellsFree)
+                        break;
+                }
+
+                if (isCellsFree)
+                {
+                    freePosition.x = x;
+                    freePosition.y = y;
                     return true;
+                }
             }
 
-            freePosition = default;
             return false;
         }
 
@@ -294,22 +295,30 @@ namespace Inventories
         /// Checks if a specified position is occupied
         /// </summary>
         public bool IsOccupied(in Vector2Int position)
-            => _cellsOccupiedItems[position] != null;
+        {
+            if (!IsWithinRange(position))
+                return true;
+
+            return _cellsOccupiedItems[position.x, position.y] != null;
+        }
 
         public bool IsOccupied(in int x, in int y)
-            => _cellsOccupiedItems[new Vector2Int(x,y)] != null;
+        {
+            if (!IsWithinRange(new Vector2Int(x, y)))
+                return true;
+
+            return _cellsOccupiedItems[x, y] != null;
+        }
 
         /// <summary>
         /// Checks if a position is free
         /// </summary>
         public bool IsFree(in Vector2Int position)
         {
-            if (position.x >= _width)
-                return false;
-            if (position.y >= _height)
+            if (!IsWithinRange(position))
                 return false;
 
-            return _cellsOccupiedItems[position] == null;
+            return _cellsOccupiedItems[position.x, position.y] == null;
         }
 
         public bool IsFree(in int x, in int y)
@@ -342,14 +351,14 @@ namespace Inventories
         }
 
         /// <summary>
-        /// Returns an item at specified position 
+        /// Returns an item at specified position
         /// </summary>
         public Item GetItem(in Vector2Int position)
         {
-            if (!_cellsOccupiedItems.ContainsKey(position))
+            if(position.x >= _width || position.y >= _height || position.y< 0 || position.x < 0)
                 throw new IndexOutOfRangeException();
 
-            var item = _cellsOccupiedItems[position];
+            var item = _cellsOccupiedItems[position.x, position.y];
             if (item == null)
                 throw new NullReferenceException();
 
@@ -368,13 +377,13 @@ namespace Inventories
 
         public bool TryGetItem(in int x, in int y, out Item item)
         {
-            if (x < 0 || y < 0 || x >= _width || y >= _height)
+            if (!IsWithinRange(new Vector2Int(x, y)))
             {
                 item = null;
                 return false;
             }
 
-            if (_cellsOccupiedItems[new Vector2Int(x, y)] == null)
+            if (_cellsOccupiedItems[x, y] == null)
             {
                 item = null;
                 return false;
@@ -385,7 +394,7 @@ namespace Inventories
         }
 
         /// <summary>
-        /// Returns matrix positions of a specified item 
+        /// Returns matrix positions of a specified item
         /// </summary>
         public Vector2Int[] GetPositions(in Item item)
         {
@@ -433,15 +442,12 @@ namespace Inventories
             if(Count == 0)
                 return;
 
-            var keysToRemove = new List<Vector2Int>();
-            foreach (var kvp in _cellsOccupiedItems)
+            for (var i = 0; i < _width; i++)
             {
-                if(_cellsOccupiedItems[kvp.Key] != null)
-                    keysToRemove.Add(kvp.Key);
-            }
-            foreach (var key in keysToRemove)
-            {
-                _cellsOccupiedItems[key] = null;
+                for (int j = 0; j < _height; j++)
+                {
+                    _cellsOccupiedItems[i, j] = null;
+                }
             }
 
             _itemsNameCounter.Reset();
@@ -504,7 +510,7 @@ namespace Inventories
             _itemPositions.Clear();
             for (int i = 0; i < _width; i++)
             for (int j = 0; j < _height; j++)
-                _cellsOccupiedItems[new Vector2Int(i, j)] = null;
+                _cellsOccupiedItems[i, j] = null;
 
             //заполняем по порядку, вызываем событие, если позиция отличается
             foreach (var item in sorted)
@@ -525,9 +531,10 @@ namespace Inventories
         /// </summary>
         public void CopyTo(in Item[,] matrix)
         {
-            foreach (var (position, item) in _cellsOccupiedItems)
+            for (int i = 0; i < _width; i++)
+            for (int j = 0; j < _height; j++)
             {
-                matrix[position.x, position.y] = item;
+                matrix[i, j] = _cellsOccupiedItems[i, j];
             }
         }
 
@@ -553,17 +560,6 @@ namespace Inventories
             return index;
         }
 
-        private void InitCells()
-        {
-            for (int j = 0; j < _height; j++)
-            {
-                for (int i = 0; i < _width; i++)
-                {
-                    _cellsOccupiedItems.Add(new Vector2Int(i, j), null);
-                }
-            }
-        }
-
         //заполняем ячейки под вещь
         private void UpdateOccupiedCells(Item item, Vector2Int coordinates)
         {
@@ -571,7 +567,7 @@ namespace Inventories
             {
                 for (var j = 0; j < item.Size.y; j++)
                 {
-                    _cellsOccupiedItems[coordinates + new Vector2Int(i, j)] = item;
+                    _cellsOccupiedItems[coordinates.x + i, coordinates.y+ j] = item;
                 }
             }
         }
@@ -583,7 +579,7 @@ namespace Inventories
             {
                 for (var j = 0; j < item.Size.y; j++)
                 {
-                    _cellsOccupiedItems[coordinates + new Vector2Int(i, j)] = null;
+                    _cellsOccupiedItems[coordinates.x + i, coordinates.y+ j] = null;
                 }
             }
         }
@@ -596,6 +592,15 @@ namespace Inventories
                 _itemPositions.TryAdd(item, position);
                 UpdateOccupiedCells(item, position);
             }
+        }
+
+        private bool IsWithinRange(Vector2Int positionToCheck)
+        {
+            if (positionToCheck.x < 0 || positionToCheck.y < 0 || positionToCheck.x >= _width || positionToCheck.y >= _height)
+            {
+                return false;
+            }
+            return true;
         }
 
         private class NameCounter
