@@ -23,8 +23,8 @@ namespace ConverterModule.Scripts
         /// <param name="inputCount">количество входных ресурсов</param>
         /// <param name="outputCount">количество выходных ресурсов</param>
         /// <param name="inputFunc">функтор, вызываемый при попытке начала цикла</param>
-        /// <param name="outputAction">экшон при завершении цикла, возвращает bool</param>
-        /// <param name="stopAction">экшон при досрочном завершении цикла, возвращает int</param>
+        /// <param name="outputAction">экшон при завершении цикла, принимает int</param>
+        /// <param name="stopAction">экшон при досрочном завершении цикла, принимает int</param>
         /// <param name="cycleTime">время одного цикла</param>
         public Processor(int inputCount, int outputCount, Func<int, bool> inputFunc, Action<int> outputAction,
             Action<int> stopAction, float cycleTime)
