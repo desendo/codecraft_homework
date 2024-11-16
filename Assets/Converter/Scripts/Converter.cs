@@ -15,6 +15,7 @@ namespace ConverterModule.Scripts
         public event Action<int> OnShippingAreaChanged;
         public int LoadingAreaCount { get; private set; }
         public int ShippingAreaCount { get; private set; }
+        public bool IsOn { get; private set; }
 
 
         /// <param name="loadingAreaCapacity">вместимость входного хранилища</param>
@@ -71,10 +72,12 @@ namespace ConverterModule.Scripts
         public void Start()
         {
             _processor.PowerOn();
+            IsOn = true;
         }
         public void Stop()
         {
             _processor.PowerOff();
+            IsOn = false;
         }
 
         public void Update(float dt)

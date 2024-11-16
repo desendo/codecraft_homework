@@ -65,7 +65,11 @@ namespace ConverterModule.Test
             {
                 resultValue = i;
             };
+            Assert.IsFalse(converter.IsOn);
+
             converter.Start();
+
+            Assert.IsTrue(converter.IsOn);
 
             var dt = 0.1f;
 
@@ -73,6 +77,33 @@ namespace ConverterModule.Test
             {
                 converter.Update(dt);
             }
+            Assert.AreEqual(0, resultValue);
+        }
+        [Test]
+        public void WhenNotStartedThanZeroOutput()
+        {
+            var converter = new Converter(10, 20, 1, 4, 0.5f);
+            Assert.NotNull(converter);
+
+            var resultValue = 0;
+
+            converter.OnShippingAreaChanged += i =>
+            {
+                resultValue = i;
+            };
+            converter.Load(10);
+            Assert.IsFalse(converter.IsOn);
+            Assert.AreEqual(10, converter.LoadingAreaCount);
+
+
+            var dt = 0.1f;
+
+            for (float i = 0f; i < 10f; i += dt)
+            {
+                converter.Update(dt);
+            }
+
+            Assert.AreEqual(10, converter.LoadingAreaCount);
             Assert.AreEqual(0, resultValue);
         }
         [Test]
