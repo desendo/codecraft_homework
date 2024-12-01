@@ -10,10 +10,10 @@ namespace Game.Game.Scripts.UI.Presenters
     {
         private readonly PlanetPopupPresenter _planetPopupPresenter;
         private readonly MoneyView _moneyView;
-        private readonly CoinPool _coinPool;
+        private readonly ICoinsSpawner _coinsSpawner;
 
         public PlanetsPresenter(List<IPlanet> planets, List<IPlanetView> planetViews,
-            PlanetPopupPresenter planetPopupPresenter, MoneyView moneyView, CoinPool coinPool)
+            PlanetPopupPresenter planetPopupPresenter, MoneyView moneyView, ICoinsSpawner coinsSpawner)
         {
             if (planets.Count != planetViews.Count)
                 throw new Exception("different views and models count");
@@ -26,7 +26,7 @@ namespace Game.Game.Scripts.UI.Presenters
 
             _planetPopupPresenter = planetPopupPresenter;
             _moneyView = moneyView;
-            _coinPool = coinPool;
+            _coinsSpawner = coinsSpawner;
         }
 
         private void BindPlanetView(IPlanet planet, IPlanetView view)
@@ -66,7 +66,7 @@ namespace Game.Game.Scripts.UI.Presenters
 
         private void FlyCoin(Transform start)
         {
-            _coinPool.Spawn(start.position, _moneyView.FlyAnchor.position);
+            _coinsSpawner.Spawn(start.position, _moneyView.FlyAnchor.position);
         }
 
         private void HandleOnIncomeReady(IPlanet planet, IPlanetView view)

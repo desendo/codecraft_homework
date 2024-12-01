@@ -20,6 +20,7 @@ namespace Gameplay
         [SerializeField] private List<PlanetView> _planetViews;
         [SerializeField] private MoneyView _moneyView;
         [SerializeField] private CoinView _coinView;
+        [SerializeField] private RectTransform _projectileParent;
 
         public override void InstallBindings()
         {
@@ -32,7 +33,8 @@ namespace Gameplay
             Container.Bind<List<IPlanetView>>().FromInstance(_planetViews.Cast<IPlanetView>().ToList()).AsSingle().NonLazy();
 
             //pool
-            Container.BindMemoryPool<CoinPool>().FromComponentInNewPrefab(_coinView);
+            Container.BindMemoryPool<CoinView, CoinPool>().FromComponentInNewPrefab(_coinView).UnderTransform(_projectileParent);
+            Container.Bind<ICoinsSpawner>().To<CoinPool>().FromResolve();
 
             //presenters
             Container.Bind<MoneyPresenter>().AsSingle().NonLazy();
