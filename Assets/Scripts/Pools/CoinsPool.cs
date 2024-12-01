@@ -14,23 +14,6 @@ namespace Game.Pools
             item.Position = pos;
         }
 
-        protected override void OnCreated(Coin item)
-        {
-            base.OnCreated(item);
-            item.gameObject.SetActive(false);
-        }
-
-        protected override void OnSpawned(Coin item)
-        {
-            base.OnSpawned(item);
-            item.gameObject.SetActive(true);
-        }
-
-        protected override void OnDespawned(Coin item)
-        {
-            base.OnDespawned(item);
-            item.gameObject.SetActive(false);
-        }
     }
 
     public interface ICoinsSpawner : IMemoryPool<Vector2Int, Coin>
