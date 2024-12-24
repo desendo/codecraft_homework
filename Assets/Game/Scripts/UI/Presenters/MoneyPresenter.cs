@@ -1,6 +1,4 @@
 ﻿using DG.Tweening;
-using DG.Tweening.Core;
-using DG.Tweening.Plugins.Options;
 using Modules.Money;
 
 namespace Game.Game.Scripts.UI.Presenters
@@ -13,23 +11,19 @@ namespace Game.Game.Scripts.UI.Presenters
         public MoneyPresenter(MoneyView moneyView, IMoneyStorage moneyStorage)
         {
             _moneyView = moneyView;
-            moneyView.Money = moneyStorage.Money;
+            _moneyView.SetMoney(moneyStorage.Money, MoneyView.AnimationType.None);
             moneyStorage.OnMoneyEarned += HandleOnMoneyEarned;
             moneyStorage.OnMoneySpent += HandleOnMoneySpent;
         }
 
-        private void HandleOnMoneySpent(int newvalue, int range)
+        private void HandleOnMoneySpent(int newValue, int range)
         {
-            _sequence?.Kill();
-            _moneyView.Money = newvalue;
+            _moneyView.SetMoney(newValue, MoneyView.AnimationType.Automatic);
         }
 
-        private void HandleOnMoneyEarned(int newvalue, int range)
+        private void HandleOnMoneyEarned(int newValue, int range)
         {
-            _sequence?.Kill();
-            _sequence = DOTween.Sequence();
-            _sequence.AppendInterval(Const.CoinFlyTime);
-            _sequence.Append(DOTween.To(() => _moneyView.Money, x => _moneyView.Money = x, newvalue, Const.CoinCounterTime));
+            _moneyView.SetMoney(newValue, MoneyView.AnimationType.Manual);
         }
     }
 }

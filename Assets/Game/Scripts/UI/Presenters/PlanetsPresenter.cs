@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using Game.Game.Scripts.Pools;
 using Modules.Planets;
-using UnityEngine;
+using Modules.UI;
+using Zenject;
 
 namespace Game.Game.Scripts.UI.Presenters
 {
-    public class PlanetsPresenter
+    public class PlanetsPresenter : IDisposable
     {
         private readonly PlanetPopupPresenter _planetPopupPresenter;
-        private readonly MoneyView _moneyView;
-        private readonly ICoinsSpawner _coinsSpawner;
 
+        private readonly List<SinglePlanetPresenter> _planetPresenters = new List<SinglePlanetPresenter>();
         public PlanetsPresenter(List<IPlanet> planets, List<IPlanetView> planetViews,
-            PlanetPopupPresenter planetPopupPresenter, MoneyView moneyView, ICoinsSpawner coinsSpawner)
+            PlanetPopupPresenter planetPopupPresenter, DiContainer container)
         {
             if (planets.Count != planetViews.Count)
                 throw new Exception("different views and models count");
@@ -21,68 +20,30 @@ namespace Game.Game.Scripts.UI.Presenters
 
             for (var index = 0; index < planets.Count; index++)
             {
-                BindPlanetView(planets[index], planetViews[index]);
+                var planetPresenter = container.Instantiate<SinglePlanetPresenter>();
+
+                planetPresenter.OnOpenPopupRequest+= HandleOnOpenPopupRequest;
+                planetPresenter.BindPlanetView(planets[index], planetViews[index]);
+
+                _planetPresenters.Add(planetPresenter);
             }
 
             _planetPopupPresenter = planetPopupPresenter;
-            _moneyView = moneyView;
-            _coinsSpawner = coinsSpawner;
         }
 
-        private void BindPlanetView(IPlanet planet, IPlanetView view)
+
+        private void HandleOnOpenPopupRequest(IPlanet obj)
         {
-            planet.OnUnlocked += () => HandleOnUnlocked(planet, view);
-            planet.OnUpgraded += x => HandleOnUpgraded(planet, view);
-            planet.OnIncomeReady += x => HandleOnIncomeReady(planet, view);
-            planet.OnIncomeReady += x => HandleOnIncomeReady(planet, view);
-
-            planet.OnIncomeTimeChanged += timeLeft => HandleOnIncomeTimeChanged(planet, view, timeLeft);
-
-            HandleOnUnlocked(planet, view);
-            HandleOnUpgraded(planet, view);
-            HandleOnIncomeReady(planet, view);
-
-            view.OnHold += () => _planetPopupPresenter.OpenPopup(planet);
-            view.OnClick += () => HandleOnPlanetClick(planet, view);
+            _planetPopupPresenter.OpenPopup(obj);
         }
 
-        private void HandleOnIncomeTimeChanged(IPlanet planet, IPlanetView view, float timeLeft)
+        public void Dispose()
         {
-            view.SetProgress(planet.IncomeProgress);
-            var timeString = $"{timeLeft:F0}s";
-            view.SetTimer(timeString);
-        }
-
-        private void HandleOnPlanetClick(IPlanet planet, IPlanetView planetView)
-        {
-            if (planet.CanUnlock)
-                planet.Unlock();
-            else if (planet.IsIncomeReady)
+            foreach (var singlePlanetPresenter in _planetPresenters)
             {
-                planet.GatherIncome();
-                FlyCoin(planetView.CoinProjectileAnimationAnchor);
+                singlePlanetPresenter.OnOpenPopupRequest -= HandleOnOpenPopupRequest;
+                singlePlanetPresenter.Dispose();
             }
-        }
-
-        private void FlyCoin(Transform start)
-        {
-            _coinsSpawner.Spawn(start.position, _moneyView.FlyAnchor.position);
-        }
-
-        private void HandleOnIncomeReady(IPlanet planet, IPlanetView view)
-        {
-            view.SetReady(planet.IsIncomeReady);
-        }
-
-        private void HandleOnUpgraded(IPlanet planet, IPlanetView view)
-        {
-            view.SetPrice(planet.Price.ToString());
-        }
-
-        private void HandleOnUnlocked(IPlanet planet, IPlanetView view)
-        {
-            view.SetLocked(!planet.IsUnlocked);
-            view.SetIcon(planet.GetIcon(planet.IsUnlocked));
         }
     }
 }

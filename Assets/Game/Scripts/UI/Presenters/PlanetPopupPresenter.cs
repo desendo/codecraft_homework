@@ -35,8 +35,6 @@ namespace Game.Game.Scripts.UI.Presenters
                 _planetPopupView.SetUpgradeEnabled(_selectedPlanet.CanUpgrade);
         }
 
-
-
         private void BindPlanetPopup(IPlanet planet)
         {
             _selectedPlanet = planet;
@@ -56,7 +54,13 @@ namespace Game.Game.Scripts.UI.Presenters
         private void HandleOnUpgraded(int level)
         {
             _planetPopupView.SetLevel($"{level}/{_selectedPlanet.MaxLevel}");
-            _planetPopupView.SetUpgradeCost($"{_selectedPlanet.Price}");
+            _planetPopupView.SetUpgradeEnabled(_selectedPlanet.CanUpgrade);
+
+            if(_selectedPlanet.Level != _selectedPlanet.MaxLevel)
+                _planetPopupView.SetUpgradeCost($"{_selectedPlanet.Price}");
+            else
+                _planetPopupView.SetIsMaxLevel();
+
         }
 
         private void HandleOnIncomeChanged(int income)

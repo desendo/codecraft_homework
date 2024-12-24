@@ -1,11 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using DG.Tweening;
 using Modules.UI;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public interface IPlanetView
@@ -86,6 +82,4 @@ public class PlanetView : MonoBehaviour, IPlanetView
     {
         _price.text = value;
     }
-
- 
 }

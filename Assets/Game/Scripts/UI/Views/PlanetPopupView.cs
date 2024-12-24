@@ -5,9 +5,12 @@ using UnityEngine.UI;
 
 public class PlanetPopupView : MonoBehaviour
 {
+    private const string MAX_LEVEL_STRING = "Max level";
+
     [SerializeField] private Button _closeButton;
     [SerializeField] private Button _upgradeButton;
     [SerializeField] private TextMeshProUGUI _upgradeCostText;
+    [SerializeField] private GameObject _upgradeCostIcon;
     [SerializeField] private TextMeshProUGUI _populationText;
     [SerializeField] private TextMeshProUGUI _incomeText;
     [SerializeField] private TextMeshProUGUI _levelText;
@@ -51,10 +54,17 @@ public class PlanetPopupView : MonoBehaviour
     public void SetUpgradeCost(string value)
     {
         _upgradeCostText.text = value;
+        _upgradeCostIcon.SetActive(true);
     }
 
     public void SetIcon(Sprite icon)
     {
         _icon.sprite = icon;
+    }
+
+    public void SetIsMaxLevel()
+    {
+        _upgradeCostText.text = MAX_LEVEL_STRING;
+        _upgradeCostIcon.SetActive(false);
     }
 }

@@ -499,6 +499,7 @@ MonoBehaviour:
   _timer: {fileID: 8019802931863089282}
   _progress: {fileID: 6948507870913343312}
   _price: {fileID: 5444377921757551026}
+  _priceIcon: {fileID: 6740194235726008877}
   _lock: {fileID: 7085741634984397813}
   _unlockPriceObject: {fileID: 6850814019076832775}
   _timerObject: {fileID: 5564512366540979095}

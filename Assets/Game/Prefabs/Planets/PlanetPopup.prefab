@@ -280,6 +280,7 @@ MonoBehaviour:
   _closeButton: {fileID: 4860622370961867766}
   _upgradeButton: {fileID: 3885529525276896717}
   _upgradeCostText: {fileID: 2019871224800427396}
+  _upgradeCostIcon: {fileID: 1249699718155092153}
   _populationText: {fileID: 2821577711935674451}
   _incomeText: {fileID: 159619003737596086}
   _levelText: {fileID: 5472911088123096804}

@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Game;
-using Game.Game.Scripts.Pools;
 using Game.Game.Scripts.UI.Presenters;
 using Game.Gameplay;
 using Modules.Planets;
+using Modules.UI;
 using UnityEngine;
 using Zenject;
 
@@ -19,8 +19,7 @@ namespace Gameplay
         [SerializeField] private PlanetPopupView _planetPopupView;
         [SerializeField] private List<PlanetView> _planetViews;
         [SerializeField] private MoneyView _moneyView;
-        [SerializeField] private CoinView _coinView;
-        [SerializeField] private RectTransform _projectileParent;
+        [SerializeField] private ParticleAnimator _particleAnimator;
 
         public override void InstallBindings()
         {
@@ -32,9 +31,8 @@ namespace Gameplay
             Container.Bind<PlanetPopupView>().FromInstance(_planetPopupView).AsSingle().NonLazy();
             Container.Bind<List<IPlanetView>>().FromInstance(_planetViews.Cast<IPlanetView>().ToList()).AsSingle().NonLazy();
 
-            //pool
-            Container.BindMemoryPool<CoinView, CoinPool>().FromComponentInNewPrefab(_coinView).UnderTransform(_projectileParent);
-            Container.Bind<ICoinsSpawner>().To<CoinPool>().FromResolve();
+            //particle emitter
+            Container.Bind<ParticleAnimator>().FromInstance(_particleAnimator).AsSingle().NonLazy();
 
             //presenters
             Container.Bind<MoneyPresenter>().AsSingle().NonLazy();
