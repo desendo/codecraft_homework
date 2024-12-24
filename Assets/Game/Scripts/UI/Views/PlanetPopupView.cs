@@ -1,12 +1,11 @@
 using System;
+using Game.Game.Scripts.UI.Presenters;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlanetPopupView : MonoBehaviour
 {
-    private const string MAX_LEVEL_STRING = "Max level";
-
     [SerializeField] private Button _closeButton;
     [SerializeField] private Button _upgradeButton;
     [SerializeField] private TextMeshProUGUI _upgradeCostText;
@@ -16,55 +15,44 @@ public class PlanetPopupView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _levelText;
     [SerializeField] private TextMeshProUGUI _titleText;
     [SerializeField] private Image _icon;
+    private PlanetPopupPresenter _planetPopupPresenter;
 
-    private void Awake()
+
+    public void BindPresenter(PlanetPopupPresenter planetPopupPresenter)
     {
-        _closeButton.onClick.AddListener(() => OnClose?.Invoke());
-        _upgradeButton.onClick.AddListener(() => OnUpgrade?.Invoke());
+        _planetPopupPresenter = planetPopupPresenter;
+        _planetPopupPresenter.StateChanged += HandleStateChanged;
+        _closeButton.onClick.AddListener(CloseButtonClick);
+        _upgradeButton.onClick.AddListener(UpgradeButtonClick);
     }
 
-    public event Action OnClose;
-    public event Action OnUpgrade;
-
-    public void SetUpgradeEnabled(bool value)
+    private void HandleStateChanged()
     {
-        _upgradeButton.interactable = value;
+        _icon.sprite = _planetPopupPresenter.Icon;
+        _upgradeButton.interactable = _planetPopupPresenter.IsUpgradeEnabled;
+        _populationText.text = _planetPopupPresenter.PopulationText;
+        _incomeText.text = _planetPopupPresenter.IncomeText;
+        _levelText.text = _planetPopupPresenter.LevelText;
+        _titleText.text = _planetPopupPresenter.TitleText;
+        _upgradeCostIcon.SetActive(!_planetPopupPresenter.IsMaxLevel);
+        _upgradeCostText.text = _planetPopupPresenter.UpgradeCostText;
     }
 
-    public void SetTitle(string value)
+    public void UnBindPresenter()
     {
-        _titleText.text = value;
+        _closeButton.onClick.RemoveListener(CloseButtonClick);
+        _upgradeButton.onClick.RemoveListener(UpgradeButtonClick);
+        _planetPopupPresenter.StateChanged -= HandleStateChanged;
+
+    }
+    private void UpgradeButtonClick()
+    {
+        _planetPopupPresenter.Upgrade();
     }
 
-    public void SetPopulation(string value)
+    private void CloseButtonClick()
     {
-        _populationText.text = value;
+        _planetPopupPresenter.Close();
     }
 
-    public void SetLevel(string value)
-    {
-        _levelText.text = value;
-    }
-
-    public void SetIncome(string value)
-    {
-        _incomeText.text = value;
-    }
-
-    public void SetUpgradeCost(string value)
-    {
-        _upgradeCostText.text = value;
-        _upgradeCostIcon.SetActive(true);
-    }
-
-    public void SetIcon(Sprite icon)
-    {
-        _icon.sprite = icon;
-    }
-
-    public void SetIsMaxLevel()
-    {
-        _upgradeCostText.text = MAX_LEVEL_STRING;
-        _upgradeCostIcon.SetActive(false);
-    }
 }
