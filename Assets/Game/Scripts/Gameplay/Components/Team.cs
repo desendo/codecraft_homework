@@ -8,9 +8,8 @@ namespace SampleGame.Gameplay
     {
         ///Variable
         [field: SerializeField]
+        [ComponentValue]
         public TeamType Type { get; set; }
 
-        public override void SetSerializedData(string data) => Type = (TeamType)int.Parse(data);
-        public override string GetSerializedData() => ((int)Type).ToString();
     }
 }

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
+using Game.Game.Scripts.App;
 using Modules.Entities;
-using Newtonsoft.Json;
-using SampleGame.Common.Data.ComponentData;
 using UnityEngine;
 
 namespace SampleGame.Gameplay
@@ -19,36 +18,25 @@ namespace SampleGame.Gameplay
             set { _queue = new List<EntityConfig>(value); }
         }
 
-        private ProductionOrderData _data = new ProductionOrderData();
+        [ComponentValue]
+        public List<string> QueueEntityIds { get; private set; } = new List<string>();
 
-        public override void SetSerializedData(string data)
+        public override void SavePrepare(IComponentSaveLoadVisitor saveLoadVisitor)
         {
-            _data = JsonConvert.DeserializeObject<ProductionOrderData>(data);
-        }
-
-        public override string GetSerializedData()
-        {
-            _data.QueueEntityIds.Clear();
+            QueueEntityIds.Clear();
             foreach (var entityConfig in _queue)
             {
-                _data.QueueEntityIds.Add(entityConfig.Name);
+                QueueEntityIds.Add(entityConfig.Name);
             }
-            return JsonConvert.SerializeObject(_data);
         }
 
-        public override void EntityRelatedInitialize(EntityCatalog entityCatalog, EntityWorld entityWorld)
+        public override void Init(IComponentSaveLoadVisitor saveLoadVisitor)
         {
             _queue.Clear();
-            foreach (var id in _data.QueueEntityIds)
+            foreach (var queueEntityId in QueueEntityIds)
             {
-                if (entityCatalog.FindConfig(id, out var config))
-                {
-                    _queue.Add(config);
-                }
-                else
-                {
-                    Debug.LogError($"cant find entity config for id:{id}");
-                }
+                if(saveLoadVisitor.Catalog.FindConfig(queueEntityId, out var cfg))
+                    _queue.Add(cfg);
             }
         }
     }

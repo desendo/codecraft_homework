@@ -9,16 +9,8 @@ namespace SampleGame.Gameplay
     {
         ///Variable
         [field: SerializeField]
+        [ComponentValue]
         public Vector3 Value { get; set; }
 
-        public override string GetSerializedData()
-        {
-            return JsonConvert.SerializeObject((SerializedVector3)Value);
-        }
-
-        public override void SetSerializedData(string data)
-        {
-            Value = JsonConvert.DeserializeObject<SerializedVector3>(data);
-        }
     }
 }

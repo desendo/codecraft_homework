@@ -9,9 +9,8 @@ namespace SampleGame.Gameplay
     {
         ///Const
         [field: SerializeField]
-        public float Current { get; private set; }
-        public override void SetSerializedData(string data) => Current = float.Parse(data, NumberStyles.Float, CultureInfo.InvariantCulture);
 
-        public override string GetSerializedData() => Current.ToString(CultureInfo.InvariantCulture);
+        public float Current { get; private set; }
+
     }
 }

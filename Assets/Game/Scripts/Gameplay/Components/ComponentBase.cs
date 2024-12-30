@@ -1,24 +1,20 @@
-﻿
-using Modules.Entities;
+﻿using Game.Game.Scripts.App;
 using UnityEngine;
 
 namespace SampleGame.Gameplay
 {
     public abstract class ComponentBase : MonoBehaviour
     {
-        public virtual bool SkipSerialization { get; } = false;
-        public virtual string GetSerializedData()
+
+        public virtual void SavePrepare(IComponentSaveLoadVisitor saveLoadVisitor)
         {
-            return string.Empty;
+
         }
 
-        public virtual void SetSerializedData(string data)
+        public virtual void Init(IComponentSaveLoadVisitor saveLoadVisitor)
         {
         }
 
-        public virtual void EntityRelatedInitialize(EntityCatalog entityCatalog, EntityWorld entityWorld)
-        {
-        }
     }
 
 }

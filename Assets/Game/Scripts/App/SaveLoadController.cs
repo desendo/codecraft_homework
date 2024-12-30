@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Modules.Common;
 using Modules.Entities;
+using Newtonsoft.Json;
 using SampleGame.Common.Data;
+using SampleGame.Common.JsonConverters;
 using SampleGame.Gameplay;
 using UnityEngine;
 
@@ -16,6 +19,8 @@ namespace Game.Game.Scripts.App
 
         private readonly List<IDisposable> _subscriptions = new ();
         private readonly EntityCatalog _entityCatalog;
+        private readonly SaveLoadVisitor _saveLoadVisitor;
+        private readonly JsonSerializerSettings _jsonSettings;
 
         public SaveLoadController(ISignalBus signalBus, EntityCatalog entityCatalog, IGameStateService gameStateService, EntityWorld entityWorld,
             SaveDataService saveDataService)
@@ -26,7 +31,14 @@ namespace Game.Game.Scripts.App
             _saveDataService = saveDataService;
             signalBus.Subscribe<PresenterSignals.LoadRequest>(HandleLoadRequest).AddTo(_subscriptions);
             signalBus.Subscribe<PresenterSignals.SaveRequest>(HandleSaveRequest).AddTo(_subscriptions);
+
+            _jsonSettings = new JsonSerializerSettings();
+            _jsonSettings.Converters.Add(new Vector3Converter());
+
+            _saveLoadVisitor = new SaveLoadVisitor(_entityWorld, _entityCatalog);
         }
+
+
 
         private async void HandleSaveRequest(PresenterSignals.SaveRequest obj)
         {
@@ -44,12 +56,20 @@ namespace Game.Game.Scripts.App
                 var components = entity.GetComponents<ComponentBase>();
                 foreach (var component in components)
                 {
-                    if(component.SkipSerialization)
-                        continue;
+                    component.SavePrepare(_saveLoadVisitor);
+                    var componentType = component.GetType();
+                    var typeString = componentType.ToString();
+                    foreach (var property in componentType.GetProperties())
+                    {
+                        if (property.GetCustomAttribute<ComponentValueAttribute>() != null)
+                        {
+                            var key = $"{typeString}:{property.Name}";
+                            entityData.Components.Add(key, JsonConvert.SerializeObject(property.GetValue(component), _jsonSettings));
+                        }
 
-                    var typeString = component.GetType().ToString();
-                    entityData.Components.Add(typeString, component.GetSerializedData());
+                    }
                 }
+
                 entityDataList.Add(entityData);
             }
 
@@ -82,9 +102,35 @@ namespace Game.Game.Scripts.App
             {
                 if (_entityCatalog.FindConfig(entityData.Name, out var config))
                 {
-                    var entity = _entityWorld.Spawn(config, entityData.Position, entityData.Rotation);
+                    var entity = _entityWorld.Spawn(config, entityData.Position, entityData.Rotation, entityData.Id);
 
-                    SetEntityData(entityData, entity);
+                    foreach (var (key,value) in entityData.Components)
+                    {
+
+                        var parts = key.Split(':');
+                        if (parts.Length != 2)
+
+                            throw new ArgumentException("Invalid key format.");
+
+                        var componentName = parts[0];
+                        var fieldKey = parts[1];
+
+                        var componentType = Type.GetType(componentName);
+                        if (componentType == null || !typeof(MonoBehaviour).IsAssignableFrom(componentType))
+                            throw new InvalidOperationException($"Component type {componentName} not found or invalid.");
+
+                        if(entity.GetComponent(componentType) == null)
+                            entity.gameObject.AddComponent(componentType);
+                        var component = entity.GetComponent(componentType);
+
+                        var field = componentType.GetProperty(fieldKey);
+                        if (field == null)
+                            throw new InvalidOperationException($"Field {fieldKey} not found on component {componentName}.");
+
+                        field.SetValue(component,JsonConvert.DeserializeObject(value, field.PropertyType, _jsonSettings));
+
+                    }
+
                 }
                 else
                 {
@@ -106,35 +152,10 @@ namespace Game.Game.Scripts.App
         {
             foreach (var componentBase in entity.GetComponents<ComponentBase>())
             {
-                componentBase.EntityRelatedInitialize(_entityCatalog, _entityWorld);
+                componentBase.Init(_saveLoadVisitor);
             }
         }
 
-        private static void SetEntityData(EntityData entityData, Entity entity)
-        {
-            foreach (var (key, value) in entityData.Components)
-            {
-                var type = Type.GetType(key);
-                if (type == null)
-                {
-                    Debug.LogError($"cant find component type for name {key}");
-                    continue;
-                }
-
-                if (entity.TryGetComponent(type, out var component))
-                {
-                    var componentBase = component as ComponentBase;
-                    if (componentBase == null)
-                        Debug.LogError($"component {component} is not {typeof(ComponentBase)}");
-                    else
-                        componentBase.SetSerializedData(value);
-                }
-                else
-                {
-                    Debug.LogError($"cant find component {key} entity {entity.Name}");
-                }
-            }
-        }
 
         public void Dispose()
         {

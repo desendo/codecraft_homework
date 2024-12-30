@@ -38,7 +38,8 @@ namespace Game.Game.Scripts
         }
         public async UniTask<(bool, int)> Save<T>(T dataObject)
         {
-            var result = await _saveHandler.Save(JsonConvert.SerializeObject(dataObject), _currentVersion + 1);
+            var jsonString = JsonConvert.SerializeObject(dataObject);
+            var result = await _saveHandler.Save(jsonString, _currentVersion + 1);
             if (result)
             {
                 PlayerPrefs.SetInt(CurrentVersionKey, _currentVersion);

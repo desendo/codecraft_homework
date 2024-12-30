@@ -1,3 +1,4 @@
+using Game.Game.Scripts.App;
 using Modules.Entities;
 using UnityEngine;
 
@@ -10,36 +11,20 @@ namespace SampleGame.Gameplay
         [field: SerializeField]
         public Entity Value { get; set; }
 
-        private int _valueId;
+        [ComponentValue]
+        public int ValueId { get; private set; } = -1;
 
-        public override void SetSerializedData(string data) => _valueId = int.Parse(data);
-
-        public override string GetSerializedData()
+        public override void SavePrepare(IComponentSaveLoadVisitor saveLoadVisitor)
         {
-            if (Value == null)
-                _valueId = -1;
-            else
-            {
-                _valueId = Value.Id;
-            }
-            return _valueId.ToString();
+            ValueId = Value == null ? -1 : Value.Id;
         }
 
-        public override void EntityRelatedInitialize(EntityCatalog entityCatalog, EntityWorld entityWorld)
+        public override void Init(IComponentSaveLoadVisitor saveLoadVisitor)
         {
-            if (_valueId == -1)
+            if (ValueId != -1)
             {
-                Value = null;
-                return;
+                Value = saveLoadVisitor.World.Get(ValueId);
             }
-
-            if (!entityWorld.Has(_valueId))
-            {
-                Debug.LogError($"cant find entity id:{_valueId}");
-                return;
-            }
-
-            Value = entityWorld.Get(_valueId);
         }
     }
 }
